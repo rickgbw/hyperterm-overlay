@@ -2,7 +2,7 @@
 
 //dependencies
 const electron = require('electron');
-const {globalShortcut,Tray,Menu} = electron;
+const {BrowserWindow,globalShortcut,Tray,Menu} = electron;
 const path = require('path');
 
 class Overlay {
@@ -12,6 +12,7 @@ class Overlay {
 		this._animating = false;
 		this._config = {};
 		this._trayAnimation = null;
+		this._lastFocus = null;
 	}
 
 	//app started
@@ -242,6 +243,9 @@ class Overlay {
 	show(force) {
 		if(!this._win || this._animating || (this._win.isVisible() && !force)) return;
 
+		//store internal window focus
+		this._lastFocus = BrowserWindow.getFocusedWindow();
+
 		//set window initial bounds (for animation)
 		if(this._config.animate) {
 			this._animating = true;
@@ -250,8 +254,10 @@ class Overlay {
 			},250);
 			this._startBounds();
 		}
-		//show window
+
+		//show and focus window
 		this._win.show();
+		this._win.focus();
 
 		//set end bounds
 		this._endBounds();
@@ -263,6 +269,17 @@ class Overlay {
 	hide() {
 		if(!this._win || this._animating || !this._win.isVisible()) return;
 
+		//search for the better previous windows focus
+		let findFocus = () => {
+			if(this._win.isFocused()) {
+				//chose internal or external focus
+				if(this._lastFocus && this._lastFocus.sessions && this._lastFocus.sessions.size)
+					this._lastFocus.focus();
+				else
+					Menu.sendActionToFirstResponder('hide:');
+			}
+		};
+
 		//control the animation
 		if(this._config.animate) {
 			this._animating = true;
@@ -271,15 +288,15 @@ class Overlay {
 			this._startBounds();
 
 			setTimeout(() => {
-				this._win.hide();
 				this._animating = false;
-				Menu.sendActionToFirstResponder('hide:');
+				findFocus();
+				this._win.hide();
 			}, 250);
 		}
 		//close without animation
 		else {
+			findFocus();
 			this._win.hide();
-			Menu.sendActionToFirstResponder('hide:');
 		}
 
 		this._clearTrayAnimation();
