@@ -2,7 +2,7 @@
 
 //dependencies
 const electron = require('electron');
-const {globalShortcut,Tray} = electron;
+const {globalShortcut,Tray,Menu} = electron;
 const path = require('path');
 
 class Overlay {
@@ -273,11 +273,14 @@ class Overlay {
 			setTimeout(() => {
 				this._win.hide();
 				this._animating = false;
+				Menu.sendActionToFirstResponder('hide:');
 			}, 250);
 		}
 		//close without animation
-		else
+		else {
 			this._win.hide();
+			Menu.sendActionToFirstResponder('hide:');
+		}
 
 		this._clearTrayAnimation();
 	}
