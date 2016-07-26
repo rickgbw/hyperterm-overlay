@@ -159,7 +159,7 @@ class Overlay {
 			});
 
 			//permanent window
-			win.on('closed', () => {
+			win.on('close', () => {
 				this._win = null;
 				this._clearTrayAnimation();
 			});
