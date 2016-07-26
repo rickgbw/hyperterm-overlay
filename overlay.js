@@ -12,18 +12,21 @@ class Overlay {
 		this._creatingWindow = false;
 		this._animating = false;
 		this._config = {};
-		this.tray = null;
+		this._tray = null;
 		this._trayAnimation = null;
 		this._lastFocus = null;
 	}
 
 	//app started
 	registerApp(app) {
+		let startup = false;
+
 		//subscribe for config changes only on first time
 		if(!this._app) {
 			app.config.subscribe(() => {
 				this._refreshConfig(true);
 			});
+			startup = true;
 		}
 
 		//load user configs
@@ -33,7 +36,7 @@ class Overlay {
 		//creating the overlay window
 		this._create(() => {
 			//open on startup
-			if(this._config.startup)
+			if(startup && this._config.startup)
 				this.show();
 		});
 	}
@@ -41,7 +44,7 @@ class Overlay {
 	//checks if new window could be created
 	registerWindow(win) {
 		if(!this._creatingWindow && this._config.unique)
-			setTimeout(() => { win.close(); },0);
+			win.close();
 	}
 
 	//apply user overlay window configs
@@ -97,17 +100,20 @@ class Overlay {
 		//tray icon
 		let trayCreated = false;
 		if(this._config.tray && !this._tray) {
-			this._tray = new Tray(path.join(__dirname, 'images', 'trayTemplate.png'));
-			this._tray.setPressedImage(path.join(__dirname, 'images', 'tray-hover.png'));
-			this._tray.on('click', () => {
-				if(!this._win)
-					this._create(() => {
+			//prevent destroy / create bug
+			setImmediate(() => {
+				this._tray = new Tray(path.join(__dirname, 'images', 'trayTemplate.png'));
+				this._tray.setPressedImage(path.join(__dirname, 'images', 'tray-hover.png'));
+				this._tray.on('click', () => {
+					if(!this._win)
+						this._create(() => {
+							this.interact();
+						});
+					else
 						this.interact();
-					});
-				else
-					this.interact();
+				});
+				trayCreated = true;
 			});
-			trayCreated = true;
 		} else if(!this._config.tray && this._tray) {
 			this._clearTrayAnimation();
 			this._tray.destroy();
@@ -245,8 +251,8 @@ class Overlay {
 	}
 
 	//show the overlay window
-	show(force) {
-		if(!this._win || this._animating || (this._win.isVisible() && !force)) return;
+	show() {
+		if(!this._win || this._animating || this._win.isVisible()) return;
 
 		//store internal window focus
 		this._lastFocus = BrowserWindow.getFocusedWindow();
