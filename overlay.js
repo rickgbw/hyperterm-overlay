@@ -19,16 +19,16 @@ class Overlay {
 
 	//app started
 	registerApp(app) {
-		//load user configs and watch for changes (only on first time)
+		//subscribe for config changes only on first time
 		if(!this._app) {
-			this._app = app;
-
-			this._refreshConfig();
-			this._app.config.subscribe(() => {
+			app.config.subscribe(() => {
 				this._refreshConfig(true);
 			});
-		} else
-			this._app = app;
+		}
+
+		//load user configs
+		this._app = app;
+		this._refreshConfig();
 
 		//creating the overlay window
 		this._create(() => {
@@ -159,7 +159,7 @@ class Overlay {
 			});
 
 			//permanent window
-			win.on('close', () => {
+			win.on('closed', () => {
 				this._win = null;
 				this._clearTrayAnimation();
 			});
@@ -309,7 +309,7 @@ class Overlay {
 
 	//tray animation when overlay window is open
 	_animateTray() {
-		if(!this._config.tray) return;
+		if(!this._config.tray || !this._tray) return;
 
 		//tool tip
 		this._tray.setToolTip('Close HyperTerm Overlay');
@@ -324,8 +324,6 @@ class Overlay {
 
 	//finish tray animation
 	_clearTrayAnimation() {
-		if(!this._config.tray) return;
-
 		if(this._trayAnimation) clearInterval(this._trayAnimation);
 
 		if(this._tray) {
@@ -353,15 +351,15 @@ class Overlay {
 
 	//unload everything applied
 	destroy() {
+		if(this._tray) {
+			this._tray.destroy();
+			this._tray = null;
+		}
 		if(this._win) {
 			this._win.close();
 			this._win = null;
 		}
 		globalShortcut.unregisterAll();
-		if(this._tray) {
-			this._tray.destroy();
-			this._tray = null;
-		}
 		this._creatingWindow = false;
 		this._animating = false;
 		this._config = {};
