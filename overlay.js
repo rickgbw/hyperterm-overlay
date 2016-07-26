@@ -7,6 +7,7 @@ const path = require('path');
 
 class Overlay {
 	constructor() {
+		this._app = null;
 		this._win = null;
 		this._creatingWindow = false;
 		this._animating = false;
@@ -18,13 +19,16 @@ class Overlay {
 
 	//app started
 	registerApp(app) {
-		this._app = app;
+		//load user configs and watch for changes (only on first time)
+		if(!this._app) {
+			this._app = app;
 
-		//load user configs and watch for changes
-		this._refreshConfig();
-		this._app.config.subscribe(() => {
-			this._refreshConfig(true);
-		});
+			this._refreshConfig();
+			this._app.config.subscribe(() => {
+				this._refreshConfig(true);
+			});
+		} else
+			this._app = app;
 
 		//creating the overlay window
 		this._create(() => {
@@ -111,7 +115,7 @@ class Overlay {
 		}
 
 
-		if(reapply) {
+		if(reapply && this._win) {
 			this._setConfigs(this._win);
 			this._endBounds(this._win);
 			//animate tray
@@ -354,7 +358,7 @@ class Overlay {
 		globalShortcut.unregisterAll();
 		if(this._tray) {
 			this._tray.destroy();
-			this.tray = null;
+			this._tray = null;
 		}
 		this._creatingWindow = false;
 		this._animating = false;
