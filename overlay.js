@@ -347,7 +347,10 @@ class Overlay {
 
 	//unload everything applied
 	destroy() {
-		this._win.close();
+		if(this._win) {
+			this._win.close();
+			this._win = null;
+		}
 		globalShortcut.unregisterAll();
 		if(this._tray) {
 			this._tray.destroy();
