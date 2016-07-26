@@ -11,6 +11,7 @@ class Overlay {
 		this._creatingWindow = false;
 		this._animating = false;
 		this._config = {};
+		this.tray = null;
 		this._trayAnimation = null;
 		this._lastFocus = null;
 	}
@@ -342,6 +343,21 @@ class Overlay {
 			});
 		} else
 			return config;
+	}
+
+	//unload everything applied
+	destroy() {
+		this._win.close();
+		globalShortcut.unregisterAll();
+		if(this._tray) {
+			this._tray.destroy();
+			this.tray = null;
+		}
+		this._creatingWindow = false;
+		this._animating = false;
+		this._config = {};
+		this._trayAnimation = null;
+		this._lastFocus = null;
 	}
 }
 

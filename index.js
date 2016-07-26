@@ -11,6 +11,10 @@ exports.onWindow = (win) => {
 	obj.registerWindow(win);
 };
 
+exports.onUnload = () => {
+	obj.destroy();
+};
+
 exports.decorateBrowserOptions = (config) => {
 	return obj.decorateBrowserOptions(config);
 };

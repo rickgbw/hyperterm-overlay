@@ -1,6 +1,6 @@
 {
   "name": "hyperterm-overlay",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A complete and customizable solution for a overlay window in your HyperTerm.",
   "main": "index.js",
   "scripts": {
