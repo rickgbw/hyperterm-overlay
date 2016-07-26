@@ -326,10 +326,12 @@ class Overlay {
 	_clearTrayAnimation() {
 		if(!this._config.tray) return;
 
-		this._tray.setToolTip('Open HyperTerm Overlay');
-
 		if(this._trayAnimation) clearInterval(this._trayAnimation);
-		this._tray.setImage(path.join(__dirname, 'images', 'trayTemplate.png'));
+
+		if(this._tray) {
+			this._tray.setToolTip('Open HyperTerm Overlay');
+			this._tray.setImage(path.join(__dirname, 'images', 'trayTemplate.png'));
+		}
 	}
 
 	//setting initial configuration for the new window
