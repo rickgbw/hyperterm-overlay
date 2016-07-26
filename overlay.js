@@ -363,7 +363,6 @@ class Overlay {
 		this._creatingWindow = false;
 		this._animating = false;
 		this._config = {};
-		this._trayAnimation = null;
 		this._lastFocus = null;
 	}
 }
