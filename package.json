@@ -1,7 +1,7 @@
 {
   "name": "hyperterm-overlay",
-  "version": "0.2.3",
-  "description": "A complete and customizable solution for a overlay window in your HyperTerm.",
+  "version": "0.2.4",
+  "description": "A complete and customizable solution for a permanent, dropdown, hotkey and overlay window in your HyperTerm.",
   "main": "index.js",
   "scripts": {
     "test": "npm run lint",

@@ -28,7 +28,8 @@ class Overlay {
 		//subscribe for config changes only on first time
 		if(!this._app) {
 			app.config.subscribe(() => {
-				this._refreshConfig(true);
+				if(this._win)
+					this._refreshConfig(true);
 			});
 			startup = true;
 		}
