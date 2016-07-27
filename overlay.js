@@ -2,7 +2,7 @@
 
 //dependencies
 const electron = require('electron');
-const {BrowserWindow,globalShortcut,Tray,Menu} = electron;
+const {BrowserWindow,globalShortcut,Tray,Menu,nativeImage} = electron;
 const path = require('path');
 
 class Overlay {
@@ -15,6 +15,10 @@ class Overlay {
 		this._tray = null;
 		this._trayAnimation = null;
 		this._lastFocus = null;
+
+		this._trayImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'trayTemplate.png'));
+		this._tray2Image = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray2Template.png'));
+		this._trayPressedImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray-hover.png'));
 	}
 
 	//app started
@@ -90,7 +94,7 @@ class Overlay {
 			});
 
 			//forces hide initially
-			this._win.hide();
+			win.hide();
 			this._creatingWindow = false;
 
 			//callback
@@ -152,8 +156,8 @@ class Overlay {
 		let trayCreated = false;
 		if(this._config.tray && !this._tray) {
 			//prevent destroy / create bug
-			this._tray = new Tray(path.join(__dirname, 'images', 'trayTemplate.png'));
-			this._tray.setPressedImage(path.join(__dirname, 'images', 'tray-hover.png'));
+			this._tray = new Tray(this._trayImage);
+			this._tray.setPressedImage(this._trayPressedImage);
 			this._tray.on('click', () => {
 				if(!this._win)
 					this._create(() => {
@@ -251,7 +255,7 @@ class Overlay {
 		let type = 0;
 		this._trayAnimation = setInterval(() => {
 			if(this._tray)
-				this._tray.setImage(path.join(__dirname, 'images', (++type % 2) ? 'trayTemplate.png' : 'tray2Template.png'));
+				this._tray.setImage((++type % 2) ? this._trayImage : this._tray2Image);
 		},400);
 	}
 
@@ -261,7 +265,7 @@ class Overlay {
 
 		if(this._tray) {
 			this._tray.setToolTip('Open HyperTerm Overlay');
-			this._tray.setImage(path.join(__dirname, 'images', 'trayTemplate.png'));
+			this._tray.setImage(this._trayImage);
 		}
 	}
 
