@@ -31,7 +31,6 @@ class Overlay {
 
 		//load user configs
 		this._app = app;
-		this._refreshConfig();
 
 		//creating the overlay window
 		this._create(() => {
@@ -45,6 +44,58 @@ class Overlay {
 	registerWindow(win) {
 		if(!this._creatingWindow && this._config.unique)
 			win.close();
+	}
+
+	//creating a new overlay window
+	_create(fn) {
+		if(this._win) return;
+
+		this._creatingWindow = true;
+
+		this._app.createWindow((win) => {
+			this._win = win;
+
+			//apply configurations
+			this._refreshConfig();
+
+			this._setConfigs(win);
+
+			//hide window when loses focus
+			win.on('blur', () => {
+				if(this._config.hideOnBlur)
+					this.hide();
+			});
+
+			//store the new size selected
+			win.on('resize', () => {
+				if(this._config.resizable && !this._creatingWindow && !this._animating) {
+					switch(this._config.position) {
+					case 'top':
+					case 'bottom':
+						this._config.size = win.getSize()[1];
+						break;
+
+					case 'right':
+					case 'left':
+						this._config.size = win.getSize()[0];
+						break;
+					}
+				}
+			});
+
+			//permanent window
+			win.on('closed', () => {
+				this._win = null;
+				this._clearTrayAnimation();
+			});
+
+			//forces hide initially
+			this._win.hide();
+			this._creatingWindow = false;
+
+			//callback
+			if(fn) fn();
+		});
 	}
 
 	//apply user overlay window configs
@@ -101,19 +152,17 @@ class Overlay {
 		let trayCreated = false;
 		if(this._config.tray && !this._tray) {
 			//prevent destroy / create bug
-			setImmediate(() => {
-				this._tray = new Tray(path.join(__dirname, 'images', 'trayTemplate.png'));
-				this._tray.setPressedImage(path.join(__dirname, 'images', 'tray-hover.png'));
-				this._tray.on('click', () => {
-					if(!this._win)
-						this._create(() => {
-							this.interact();
-						});
-					else
+			this._tray = new Tray(path.join(__dirname, 'images', 'trayTemplate.png'));
+			this._tray.setPressedImage(path.join(__dirname, 'images', 'tray-hover.png'));
+			this._tray.on('click', () => {
+				if(!this._win)
+					this._create(() => {
 						this.interact();
-				});
-				trayCreated = true;
+					});
+				else
+					this.interact();
 			});
+			trayCreated = true;
 		} else if(!this._config.tray && this._tray) {
 			this._clearTrayAnimation();
 			this._tray.destroy();
@@ -130,55 +179,6 @@ class Overlay {
 		}
 	}
 
-	//creating a new overlay window
-	_create(fn) {
-		if(this._win) return;
-
-		this._creatingWindow = true;
-
-		this._app.createWindow((win) => {
-			this._win = win;
-
-			this._setConfigs(win);
-
-			//hide window when loses focus
-			win.on('blur', () => {
-				if(this._config.hideOnBlur)
-					this.hide();
-			});
-
-			//store the new size selected
-			win.on('resize', () => {
-				if(this._config.resizable && !this._creatingWindow && !this._animating) {
-					switch(this._config.position) {
-					case 'top':
-					case 'bottom':
-						this._config.size = win.getSize()[1];
-						break;
-
-					case 'right':
-					case 'left':
-						this._config.size = win.getSize()[0];
-						break;
-					}
-				}
-			});
-
-			//permanent window
-			win.on('closed', () => {
-				this._win = null;
-				this._clearTrayAnimation();
-			});
-
-			//forces hide initially
-			this._win.hide();
-			this._creatingWindow = false;
-
-			//callback
-			if(fn) fn();
-		});
-	}
-
 	//change windows settings for the overlay window
 	_setConfigs(win) {
 		win.setHasShadow(this._config.hasShadow);
@@ -191,16 +191,6 @@ class Overlay {
 		const screen = electron.screen;
 		let display = (!this._config.primaryDisplay) ? screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) : screen.getPrimaryDisplay();
 		return display;
-	}
-
-	//open or close overlay window
-	interact() {
-		if(!this._win) return;
-
-		if(!this._win.isVisible())
-			this.show();
-		else
-			this.hide();
 	}
 
 	_startBounds() {
@@ -248,6 +238,58 @@ class Overlay {
 			this._win.setBounds({ x: x, y: y, width: width, height: size }, this._config.animate);
 			break;
 		}
+	}
+
+	//tray animation when overlay window is open
+	_animateTray() {
+		if(!this._config.tray || !this._tray) return;
+
+		//tool tip
+		this._tray.setToolTip('Close HyperTerm Overlay');
+
+		if(this._trayAnimation) clearInterval(this._trayAnimation);
+		let type = 0;
+		this._trayAnimation = setInterval(() => {
+			if(this._tray)
+				this._tray.setImage(path.join(__dirname, 'images', (++type % 2) ? 'trayTemplate.png' : 'tray2Template.png'));
+		},400);
+	}
+
+	//finish tray animation
+	_clearTrayAnimation() {
+		if(this._trayAnimation) clearInterval(this._trayAnimation);
+
+		if(this._tray) {
+			this._tray.setToolTip('Open HyperTerm Overlay');
+			this._tray.setImage(path.join(__dirname, 'images', 'trayTemplate.png'));
+		}
+	}
+
+	//setting initial configuration for the new window
+	decorateBrowserOptions(config) {
+		if(this._creatingWindow) {
+			return Object.assign({}, config, {
+				titleBarStyle: '',
+				frame: false,
+				minWidth: 0,
+				minHeight: 0,
+				maximizable: false,
+				minimizable: false,
+				movable: false,
+				show: false
+			});
+		} else
+			return config;
+	}
+
+	//open or close overlay window
+	interact() {
+		if(!this._win) return;
+
+		if(!this._win.isVisible())
+			this.show();
+		else
+			this.hide();
 	}
 
 	//show the overlay window
@@ -311,48 +353,6 @@ class Overlay {
 		}
 
 		this._clearTrayAnimation();
-	}
-
-	//tray animation when overlay window is open
-	_animateTray() {
-		if(!this._config.tray || !this._tray) return;
-
-		//tool tip
-		this._tray.setToolTip('Close HyperTerm Overlay');
-
-		if(this._trayAnimation) clearInterval(this._trayAnimation);
-		let type = 0;
-		this._trayAnimation = setInterval(() => {
-			if(this._tray)
-				this._tray.setImage(path.join(__dirname, 'images', (++type % 2) ? 'trayTemplate.png' : 'tray2Template.png'));
-		},400);
-	}
-
-	//finish tray animation
-	_clearTrayAnimation() {
-		if(this._trayAnimation) clearInterval(this._trayAnimation);
-
-		if(this._tray) {
-			this._tray.setToolTip('Open HyperTerm Overlay');
-			this._tray.setImage(path.join(__dirname, 'images', 'trayTemplate.png'));
-		}
-	}
-
-	//setting initial configuration for the new window
-	decorateBrowserOptions(config) {
-		if(this._creatingWindow) {
-			return Object.assign({}, config, {
-				titleBarStyle: '',
-				frame: false,
-				minWidth: 0,
-				minHeight: 0,
-				maximizable: false,
-				minimizable: false,
-				movable: false,
-				show: false
-			});
-		} else
-			return config;
 	}
 
 	//unload everything applied
