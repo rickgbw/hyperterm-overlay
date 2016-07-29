@@ -5,6 +5,9 @@ const electron = require('electron');
 const {BrowserWindow,globalShortcut,Tray,Menu,nativeImage} = electron;
 const path = require('path');
 
+//check if platform is linux
+const isLinux = (process.platform == 'linux');
+
 class Overlay {
 	constructor() {
 		this._app = null;
@@ -15,7 +18,9 @@ class Overlay {
 		this._tray = null;
 		this._trayAnimation = null;
 		this._lastFocus = null;
+		this._forceStartup = false;
 
+		//store tray images
 		this._trayImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'trayTemplate.png'));
 		this._tray2Image = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray2Template.png'));
 		this._trayPressedImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray-hover.png'));
@@ -40,7 +45,7 @@ class Overlay {
 		//creating the overlay window
 		this._create(() => {
 			//open on startup
-			if(startup && this._config.startup)
+			if((startup && this._config.startup) || this._forceStartup)
 				this.show();
 		});
 	}
@@ -158,6 +163,7 @@ class Overlay {
 		if(this._config.tray && !this._tray) {
 			//prevent destroy / create bug
 			this._tray = new Tray(this._trayImage);
+			this._tray.setToolTip('Open HyperTerm Overlay');
 			this._tray.setPressedImage(this._trayPressedImage);
 			this._tray.on('click', () => {
 				if(!this._win)
@@ -252,12 +258,14 @@ class Overlay {
 		//tool tip
 		this._tray.setToolTip('Close HyperTerm Overlay');
 
-		if(this._trayAnimation) clearInterval(this._trayAnimation);
-		let type = 0;
-		this._trayAnimation = setInterval(() => {
-			if(this._tray)
-				this._tray.setImage((++type % 2) ? this._trayImage : this._tray2Image);
-		},400);
+		if(!isLinux) {
+			if(this._trayAnimation) clearInterval(this._trayAnimation);
+			let type = 0;
+			this._trayAnimation = setInterval(() => {
+				if(this._tray)
+					this._tray.setImage((++type % 2) ? this._trayImage : this._tray2Image);
+			},400);
+		}
 	}
 
 	//finish tray animation
@@ -266,7 +274,7 @@ class Overlay {
 
 		if(this._tray) {
 			this._tray.setToolTip('Open HyperTerm Overlay');
-			this._tray.setImage(this._trayImage);
+			if(isLinux) this._tray.setImage(this._trayImage);
 		}
 	}
 
@@ -333,7 +341,7 @@ class Overlay {
 				//chose internal or external focus
 				if(this._lastFocus && this._lastFocus.sessions && this._lastFocus.sessions.size)
 					this._lastFocus.focus();
-				else
+				else if(!isLinux)
 					Menu.sendActionToFirstResponder('hide:');
 			}
 		};
@@ -367,6 +375,8 @@ class Overlay {
 			this._tray = null;
 		}
 		if(this._win) {
+			//open again if is a plugin reload
+			this._forceStartup = (this._win.isVisible());
 			this._win.close();
 			this._win = null;
 		}
