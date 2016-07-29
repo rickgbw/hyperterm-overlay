@@ -274,7 +274,7 @@ class Overlay {
 
 		if(this._tray) {
 			this._tray.setToolTip('Open HyperTerm Overlay');
-			if(isLinux) this._tray.setImage(this._trayImage);
+			if(!isLinux) this._tray.setImage(this._trayImage);
 		}
 	}
 
