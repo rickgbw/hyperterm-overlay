@@ -41,7 +41,12 @@ overlay: {
 ### animate
 - Value: true or false
 - Default: true
-- Enable animation when show and hide the window
+- Enable animation when show and hide the window.
+
+### alwaysOnTop
+- Value: true or false
+- Default: true
+- Makes Hyperterm Overlay window stay always on top.
 
 ### hasShadow
 - Value: true or false
