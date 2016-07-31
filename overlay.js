@@ -297,7 +297,11 @@ class Overlay {
 
 	//open or close overlay window
 	interact() {
-		if(!this._win) return;
+		if(!this._win) {
+			//re-create overlay window and show
+			this._create(() => this.show());
+			return;
+		}
 
 		if(!this._win.isVisible())
 			this.show();
