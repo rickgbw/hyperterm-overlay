@@ -165,14 +165,7 @@ class Overlay {
 			this._tray = new Tray(this._trayImage);
 			this._tray.setToolTip('Open HyperTerm Overlay');
 			this._tray.setPressedImage(this._trayPressedImage);
-			this._tray.on('click', () => {
-				if(!this._win)
-					this._create(() => {
-						this.interact();
-					});
-				else
-					this.interact();
-			});
+			this._tray.on('click', () => this.interact());
 			trayCreated = true;
 		} else if(!this._config.tray && this._tray) {
 			this._clearTrayAnimation();
