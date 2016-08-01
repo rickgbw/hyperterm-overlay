@@ -1,22 +1,21 @@
 'use strict';
 
-const Overlay = require('./overlay');
-const obj = new Overlay();
+const overlay = require('./overlay');
 
 exports.onApp = app => {
-	obj.registerApp(app);
+	overlay.registerApp(app);
 };
 
 exports.onWindow = win => {
-	obj.registerWindow(win);
+	overlay.registerWindow(win);
 };
 
 exports.onUnload = () => {
-	obj.destroy();
+	overlay.destroy();
 };
 
 exports.decorateBrowserOptions = config => {
-	return obj.decorateBrowserOptions(config);
+	return overlay.decorateBrowserOptions(config);
 };
 
 exports.decorateMenu = menu => {
@@ -26,7 +25,7 @@ exports.decorateMenu = menu => {
 			const newItem = Object.assign({}, item);
 			newItem.submenu = newItem.submenu.concat({
 				label: 'Show/Hide Overlay',
-				click: () => obj.interact()
+				click: () => overlay.interact()
 			});
 			return newItem;
 		}

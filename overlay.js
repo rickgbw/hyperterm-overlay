@@ -101,7 +101,6 @@ class Overlay {
 
 			//forces hide initially
 			win.hide();
-			this._creatingWindow = false;
 
 			//callback
 			if(fn) fn();
@@ -271,6 +270,7 @@ class Overlay {
 	//setting initial configuration for the new window
 	decorateBrowserOptions(config) {
 		if(this._creatingWindow) {
+			this._creatingWindow = false;
 			return Object.assign({}, config, {
 				titleBarStyle: '',
 				frame: false,
@@ -382,4 +382,4 @@ class Overlay {
 	}
 }
 
-module.exports = Overlay;
+module.exports = new Overlay();
