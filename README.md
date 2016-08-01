@@ -11,7 +11,7 @@ A complete and customizable solution for a permanent / dropdown / hotkey / overl
 Edit your `~/.hyperterm.js` (`Cmd+,`) and insert the `hyperterm-overlay` in your `plugins` array:
 ```js
 plugins: [
-	'hyperterm-overlay'
+  'hyperterm-overlay'
 ],
 ```
 
@@ -21,21 +21,27 @@ Add `overlay` in your `~/.hyperterm.js` config.
 The configuration below shows all possibilities with their respective default values.
 
 ```js
-overlay: {
-	animate: true,
-	alwaysOnTop: true,
-	hasShadow: false,
-	hideOnBlur: false,
-	hideDock: false,
-	hotkeys: ['Option+Space'],
-	resizable: true,
-	position: 'top',
-	primaryDisplay: false,
-	startup: false,
-	size: 0.4,
-	tray: true,
-	unique: false
-}
+module.exports = {
+  config: {
+    // other configs...
+    overlay: {
+      animate: true,
+      alwaysOnTop: true,
+      hasShadow: false,
+      hideOnBlur: false,
+      hideDock: false,
+      hotkeys: ['Option+Space'],
+      resizable: true,
+      position: 'top',
+      primaryDisplay: false,
+      startup: false,
+      size: 0.4,
+      tray: true,
+      unique: false
+    },
+  },
+  //...
+};
 ```
 
 ### animate
