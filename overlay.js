@@ -62,7 +62,7 @@ class Overlay {
 
 		this._creatingWindow = true;
 
-		this._app.createWindow((win) => {
+		this._app.createWindow(win => {
 			this._win = win;
 
 			//apply configurations
@@ -123,7 +123,7 @@ class Overlay {
 
 			//removing the initial windows of hyperterm
 			if(userConfig.unique && !this._config.unique) {
-				this._app.getWindows().forEach((win) => {
+				this._app.getWindows().forEach(win => {
 					if(win != this._win)
 						win.close();
 				});
@@ -152,11 +152,8 @@ class Overlay {
 
 		//registering the hotkeys
 		globalShortcut.unregisterAll();
-		for(let hotkey of this._config.hotkeys) {
-			globalShortcut.register(hotkey, () => {
-				this.interact();
-			});
-		}
+		for(let hotkey of this._config.hotkeys)
+			globalShortcut.register(hotkey, () => this.interact());
 
 		//tray icon
 		let trayCreated = false;
