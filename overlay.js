@@ -54,6 +54,8 @@ class Overlay {
 	registerWindow(win) {
 		if(!this._creatingWindow && this._config.unique)
 			win.close();
+		else if(this._creatingWindow)
+			this._creatingWindow = false;
 	}
 
 	//creating a new overlay window
@@ -270,7 +272,6 @@ class Overlay {
 	//setting initial configuration for the new window
 	decorateBrowserOptions(config) {
 		if(this._creatingWindow) {
-			this._creatingWindow = false;
 			return Object.assign({}, config, {
 				titleBarStyle: '',
 				frame: false,
