@@ -25,15 +25,15 @@ module.exports = {
   config: {
     // other configs...
     overlay: {
-      animate: true,
       alwaysOnTop: true,
+      animate: true,
       hasShadow: false,
-      hideOnBlur: false,
       hideDock: false,
+      hideOnBlur: false,
       hotkeys: ['Option+Space'],
-      resizable: true,
       position: 'top',
       primaryDisplay: false,
+      resizable: true,
       startAlone: false,
       startup: false,
       size: 0.4,
@@ -45,15 +45,15 @@ module.exports = {
 };
 ```
 
-### animate
-- Value: true or false
-- Default: true
-- Enable animation when show and hide the window.
-
 ### alwaysOnTop
 - Value: true or false
 - Default: true
 - Makes Hyperterm Overlay window stay always on top.
+
+### animate
+- Value: true or false
+- Default: true
+- Enable animation when show and hide the window.
 
 ### hasShadow
 - Value: true or false
@@ -75,13 +75,6 @@ module.exports = {
 - Default: ['Option+Space']
 - Specify one or more hotkeys to show and hide the HyperTerm Overlay (see: [`Accelerator`](https://github.com/electron/electron/blob/master/docs/api/accelerator.md))
 
-### resizable
-- Value: true or false
-- Default: true
-- Allow the HyperTerm Overlay be resizable.
-
-![resize](https://cloud.githubusercontent.com/assets/924158/17121469/5281a916-52aa-11e6-92f5-fa1c3dff75c8.gif)
-
 ### position
 - Value: 'top', 'bottom', 'left' or 'right'
 - Default: 'top'
@@ -91,6 +84,13 @@ module.exports = {
 - Value: true or false
 - Default: false
 - Show HyperTerm Overlay only on primary display.
+
+### resizable
+- Value: true or false
+- Default: true
+- Allow the HyperTerm Overlay be resizable.
+
+![resize](https://cloud.githubusercontent.com/assets/924158/17121469/5281a916-52aa-11e6-92f5-fa1c3dff75c8.gif)
 
 ### size
 - Value: float or number

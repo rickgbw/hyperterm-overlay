@@ -13,6 +13,7 @@ class Overlay {
 		this._app = null;
 		this._win = null;
 		this._creatingWindow = false;
+		this._decoratingWindow = false;
 		this._animating = false;
 		this._config = {};
 		this._tray = null;
@@ -54,8 +55,8 @@ class Overlay {
 	registerWindow(win) {
 		if(!this._creatingWindow && this._config.unique)
 			win.close();
-		else if(this._creatingWindow)
-			this._creatingWindow = false;
+		else if(this._decoratingWindow)
+			this._decoratingWindow = false;
 	}
 
 	//creating a new overlay window
@@ -63,6 +64,7 @@ class Overlay {
 		if(this._win) return;
 
 		this._creatingWindow = true;
+		this._decoratingWindow = true;
 
 		this._app.createWindow(win => {
 			this._win = win;
@@ -123,7 +125,7 @@ class Overlay {
 				this._app.dock.show();
 
 			//removing the initial windows of hyperterm
-			if((userConfig.unique && !this._config.unique) || (this._config.startAlone && !reapply)) {
+			if((userConfig.unique && !this._config.unique) || (userConfig.startAlone && !reapply)) {
 				this._app.getWindows().forEach(win => {
 					if(win != this._win)
 						win.close();
@@ -133,15 +135,15 @@ class Overlay {
 
 		//default configuration
 		this._config = {
-			animate: true,
 			alwaysOnTop: true,
+			animate: true,
 			hasShadow: false,
-			hideOnBlur: false,
 			hideDock: false,
+			hideOnBlur: false,
 			hotkeys: ['Option+Space'],
-			resizable: true,
 			position: 'top',
 			primaryDisplay: false,
+			resizable: true,
 			size: 0.4,
 			startAlone: false,
 			startup: false,
@@ -272,7 +274,7 @@ class Overlay {
 
 	//setting initial configuration for the new window
 	decorateBrowserOptions(config) {
-		if(this._creatingWindow) {
+		if(this._decoratingWindow) {
 			return Object.assign({}, config, {
 				titleBarStyle: '',
 				frame: false,
@@ -378,6 +380,7 @@ class Overlay {
 		}
 		globalShortcut.unregisterAll();
 		this._creatingWindow = false;
+		this._decoratingWindow = false;
 		this._animating = false;
 		this._config = {};
 		this._lastFocus = null;
