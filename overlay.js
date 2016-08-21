@@ -45,15 +45,8 @@ class Overlay {
 		//creating the overlay window
 		this._create(() => {
 			//open on startup
-			if((startup && this._config.startup) || this._forceStartup) {
+			if((startup && this._config.startup) || this._forceStartup)
 				this.show();
-				if(this._config.onStartup) {
-					this._app.getWindows().forEach(win => {
-						if(win != this._win)
-							win.close();
-					});
-				}
-			}
 		});
 	}
 
@@ -128,9 +121,9 @@ class Overlay {
 				this._app.dock.hide();
 			else if(this._config.unique && this._config.hideDock)
 				this._app.dock.show();
-				
+
 			//removing the initial windows of hyperterm
-			if(userConfig.unique && !this._config.unique) {
+			if((userConfig.unique && !this._config.unique) || (this._config.startAlone && !reapply)) {
 				this._app.getWindows().forEach(win => {
 					if(win != this._win)
 						win.close();
@@ -149,9 +142,9 @@ class Overlay {
 			resizable: true,
 			position: 'top',
 			primaryDisplay: false,
-			startup: false,
-			onStartup: false,
 			size: 0.4,
+			startup: false,
+			startAlone: false,
 			tray: true,
 			unique: false
 		};

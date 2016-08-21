@@ -92,17 +92,6 @@ module.exports = {
 - Default: false
 - Show HyperTerm Overlay only on primary display.
 
-### startup
-- Value: true or false
-- Default: true
-- Open HyperTerm Overlay on HyperTerm startup.
-
-### onStartup
-- Value: true or false
-- Default: false
-- Makes HyperTerm Overlay the unique window displayed when started.
-- Other windows started will be default HyperTerm windows.
-
 ### size
 - Value: float or number
 - Default: 0.4
@@ -110,6 +99,17 @@ module.exports = {
  The possible values are a `number` or a `float`.
  If is a number, it represents the size um pixels.
  Else, if is a float, it means the percentage of the screen.
+
+### startup
+- Value: true or false
+- Default: true
+- Open HyperTerm Overlay on HyperTerm startup.
+
+### startAlone
+- Value: true or false
+- Default: false
+- Makes HyperTerm Overlay the unique window displayed when started.
+- Other windows started will be default HyperTerm windows.
 
 ### tray
 - Value: true or false
