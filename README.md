@@ -34,8 +34,8 @@ module.exports = {
       resizable: true,
       position: 'top',
       primaryDisplay: false,
+      startAlone: false,
       startup: false,
-      onStartup: false,
       size: 0.4,
       tray: true,
       unique: false
@@ -100,16 +100,16 @@ module.exports = {
  If is a number, it represents the size um pixels.
  Else, if is a float, it means the percentage of the screen.
 
-### startup
-- Value: true or false
-- Default: true
-- Open HyperTerm Overlay on HyperTerm startup.
-
 ### startAlone
 - Value: true or false
 - Default: false
 - Makes HyperTerm Overlay the unique window displayed when started.
 - Other windows started will be default HyperTerm windows.
+
+### startup
+- Value: true or false
+- Default: true
+- Open HyperTerm Overlay on HyperTerm startup.
 
 ### tray
 - Value: true or false

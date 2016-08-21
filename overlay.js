@@ -143,8 +143,8 @@ class Overlay {
 			position: 'top',
 			primaryDisplay: false,
 			size: 0.4,
-			startup: false,
 			startAlone: false,
+			startup: false,
 			tray: true,
 			unique: false
 		};
