@@ -107,6 +107,7 @@ class Overlay {
 			win.hide();
 
 			//callback
+			this._creatingWindow = false;
 			if(fn) fn();
 		});
 	}
