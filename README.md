@@ -35,6 +35,7 @@ module.exports = {
       position: 'top',
       primaryDisplay: false,
       startup: false,
+      onStartup: false,
       size: 0.4,
       tray: true,
       unique: false
@@ -95,6 +96,12 @@ module.exports = {
 - Value: true or false
 - Default: true
 - Open HyperTerm Overlay on HyperTerm startup.
+
+### onStartup
+- Value: true or false
+- Default: false
+- Makes HyperTerm Overlay the unique window displayed when started.
+- Other windows started will be default HyperTerm windows.
 
 ### size
 - Value: float or number
