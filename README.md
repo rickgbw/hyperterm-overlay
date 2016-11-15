@@ -1,14 +1,14 @@
 # HyperTerm Overlay
 
-A complete and customizable solution for a permanent / dropdown / hotkey / overlay window in your HyperTerm, accessible via hotkeys and/or toolbar icon (tray).
+A complete and customizable solution for a permanent / dropdown / hotkey / overlay window in your Hyper.app, accessible via hotkeys and/or toolbar icon (tray).
 
-**Important:** Designed for HyperTerm >= 0.7.0
+**Important:** Designed for Hyper.app >= 0.7.0
 
 ![home2](https://cloud.githubusercontent.com/assets/924158/17121698/d122bcaa-52ab-11e6-876c-25a267d00e89.gif)
 
 ## Install
 
-Edit your `~/.hyperterm.js` (`Cmd+,`) and insert the `hyperterm-overlay` in your `plugins` array:
+Edit your `~/.hyper.js` (`Cmd+,`) and insert the `hyperterm-overlay` in your `plugins` array:
 ```js
 plugins: [
   'hyperterm-overlay'
@@ -17,7 +17,7 @@ plugins: [
 
 ## Configuration
 
-Add `overlay` in your `~/.hyperterm.js` config.
+Add `overlay` in your `~/.hyper.js` config.
 The configuration below shows all possibilities with their respective default values.
 
 ```js
@@ -39,7 +39,7 @@ module.exports = {
       size: 0.4,
       tray: true,
       unique: false
-    },
+    }
   },
   //...
 };
@@ -104,12 +104,12 @@ module.exports = {
 - Value: true or false
 - Default: false
 - Makes HyperTerm Overlay the unique window displayed when started.
-- Other windows started will be default HyperTerm windows.
+- Other windows started will be default Hyper.app windows.
 
 ### startup
 - Value: true or false
 - Default: true
-- Open HyperTerm Overlay on HyperTerm startup.
+- Open HyperTerm Overlay on Hyper.app startup.
 
 ### tray
 - Value: true or false
@@ -121,7 +121,7 @@ module.exports = {
 ### unique
 - Value: true or false
 - Default: false
-- Makes HyperTerm Overlay the unique window of HyperTerm. Any other window will be removed.
+- Makes HyperTerm Overlay the unique window of Hyper.app. Any other window will be removed.
 
 ## Licence
 
