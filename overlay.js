@@ -5,8 +5,8 @@ const electron = require('electron');
 const {BrowserWindow,globalShortcut,Tray,Menu,nativeImage} = electron;
 const path = require('path');
 
-//check if platform is linux
-const isLinux = (process.platform == 'linux');
+//check if platform is Mac
+const isMac = process.platform === 'darwin';
 
 class Overlay {
 	constructor() {
@@ -253,7 +253,7 @@ class Overlay {
 		//tool tip
 		this._tray.setToolTip('Close HyperTerm Overlay');
 
-		if(!isLinux) {
+		if(isMac) {
 			if(this._trayAnimation) clearInterval(this._trayAnimation);
 			let type = 0;
 			this._trayAnimation = setInterval(() => {
@@ -269,7 +269,7 @@ class Overlay {
 
 		if(this._tray) {
 			this._tray.setToolTip('Open HyperTerm Overlay');
-			if(!isLinux) this._tray.setImage(this._trayImage);
+			if(isMac) this._tray.setImage(this._trayImage);
 		}
 	}
 
@@ -340,7 +340,7 @@ class Overlay {
 				//chose internal or external focus
 				if(this._lastFocus && this._lastFocus.sessions && this._lastFocus.sessions.size)
 					this._lastFocus.focus();
-				else if(!isLinux)
+				else if(isMac)
 					Menu.sendActionToFirstResponder('hide:');
 			}
 		};
