@@ -106,6 +106,9 @@ class Overlay {
 			//forces hide initially
 			win.hide();
 
+			//activate terminal
+			win.rpc.emit('termgroup add req');
+
 			//callback
 			this._creatingWindow = false;
 			if(fn) fn();
