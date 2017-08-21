@@ -192,7 +192,7 @@ class Overlay {
 	_setConfigs(win) {
 		win.setHasShadow(this._config.hasShadow);
 		win.setResizable(this._config.resizable);
-		win.setAlwaysOnTop(this._config.alwaysOnTop);
+		win.setAlwaysOnTop(this._config.alwaysOnTop, 'screen');
 	}
 
 	//get current display
