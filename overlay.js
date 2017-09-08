@@ -364,6 +364,7 @@ class Overlay {
 		//close without animation
 		else {
 			findFocus();
+			this._win.minimize();
 			this._win.hide();
 		}
 
