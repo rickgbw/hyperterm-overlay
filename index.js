@@ -1,33 +1,40 @@
-'use strict';
-
+/* eslint-disable one-var */
 const overlay = require('./overlay');
 
-exports.onApp = app => {
-	overlay.registerApp(app);
+const onApp = (app) => {
+  overlay.registerApp(app);
 };
 
-exports.onWindow = win => {
-	overlay.registerWindow(win);
+const onWindow = (win) => {
+  overlay.registerWindow(win);
 };
 
-exports.onUnload = () => {
-	overlay.destroy();
+const onUnload = () => {
+  overlay.destroy();
 };
 
-exports.decorateBrowserOptions = config => {
-	return overlay.decorateBrowserOptions(config);
-};
+const decorateBrowserOptions = config => overlay.decorateBrowserOptions(config);
 
-exports.decorateMenu = menu => {
-	return menu.map(
-		item => {
-			if (item.label !== 'Plugins') return item;
-			const newItem = Object.assign({}, item);
-			newItem.submenu = newItem.submenu.concat({
-				label: 'Show/Hide Overlay',
-				click: () => overlay.interact()
-			});
-			return newItem;
-		}
-	);
+const decorateMenu = menu => menu.map(
+  (item) => {
+    if (item.label !== 'Plugins') {
+      return item;
+    }
+    const newItem = Object.assign({}, item);
+
+    newItem.submenu = newItem.submenu.concat({
+      label: 'Show/Hide Overlay',
+      click: () => overlay.interact()
+    });
+
+    return newItem;
+  }
+);
+
+module.exports = {
+  onApp,
+  onUnload,
+  onWindow,
+  decorateBrowserOptions,
+  decorateMenu
 };
