@@ -1,394 +1,473 @@
-'use strict';
+// dependencies
+const electron = require('electron'),
+  path = require('path');
 
-//dependencies
-const electron = require('electron');
-const {BrowserWindow,globalShortcut,Tray,Menu,nativeImage} = electron;
-const path = require('path');
-
-//check if platform is Mac
-const isMac = process.platform === 'darwin';
+// check if platform is Mac
+const isMac = process.platform === 'darwin', // eslint-disable-line one-var
+  {BrowserWindow, globalShortcut, Tray, Menu, nativeImage} = electron;
 
 class Overlay {
-	constructor() {
-		this._app = null;
-		this._win = null;
-		this._creatingWindow = false;
-		this._decoratingWindow = false;
-		this._animating = false;
-		this._config = {};
-		this._tray = null;
-		this._trayAnimation = null;
-		this._lastFocus = null;
-		this._forceStartup = false;
+  constructor () {
+    this._app = null;
+    this._win = null;
+    this._creatingWindow = false;
+    this._decoratingWindow = false;
+    this._animating = false;
+    this._config = {};
+    this._tray = null;
+    this._trayAnimation = null;
+    this._lastFocus = null;
+    this._forceStartup = false;
 
-		//store tray images
-		this._trayImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'trayTemplate.png'));
-		this._tray2Image = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray2Template.png'));
-		this._trayPressedImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray-hover.png'));
-	}
+    // store tray images
+    this._trayImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'trayTemplate.png'));
+    this._tray2Image = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray2Template.png'));
+    this._trayPressedImage = nativeImage.createFromPath(path.join(__dirname, 'images', 'tray-hover.png'));
+  }
 
-	//app started
-	registerApp(app) {
-		let startup = false;
+  // app started
+  registerApp (app) {
+    let startup = false;
 
-		//subscribe for config changes only on first time
-		if(!this._app) {
-			app.config.subscribe(() => {
-				if(this._win)
-					this._refreshConfig(true);
-			});
-			startup = true;
-		}
+    // subscribe for config changes only on first time
+    if (!this._app) {
+      app.config.subscribe(() => {
+        if (this._win) {
+          this._refreshConfig(true);
+        }
+      });
+      startup = true;
+    }
 
-		//load user configs
-		this._app = app;
+    // load user configs
+    this._app = app;
 
-		//creating the overlay window
-		this._create(() => {
-			//open on startup
-			if((startup && this._config.startup) || this._forceStartup)
-				this.show();
-		});
-	}
+    // creating the overlay window
+    this._create(() => {
+      // open on startup
+      if ((startup && this._config.startup) || this._forceStartup) {
+        this.show();
+      }
+    });
+  }
 
-	//checks if new window could be created
-	registerWindow(win) {
-		if(!this._creatingWindow && this._config.unique)
-			win.close();
-		else if(this._decoratingWindow)
-			this._decoratingWindow = false;
-	}
+  // checks if new window could be created
+  registerWindow (win) {
+    if (!this._creatingWindow && this._config.unique) {
+      win.close();
+    } else if (this._decoratingWindow) {
+      this._decoratingWindow = false;
+    }
+  }
 
-	//creating a new overlay window
-	_create(fn) {
-		if(this._win) return;
+  // creating a new overlay window
+  _create (fn) {
+    if (this._win) {
+      return;
+    }
 
-		this._creatingWindow = true;
-		this._decoratingWindow = true;
+    this._creatingWindow = true;
+    this._decoratingWindow = true;
 
-		this._app.createWindow(win => {
-			this._win = win;
+    this._app.createWindow((win) => {
+      this._win = win;
 
-			//apply configurations
-			this._refreshConfig();
+      // apply configurations
+      this._refreshConfig();
 
-			this._setConfigs(win);
+      this._setConfigs(win);
 
-			//hide window when loses focus
-			win.on('blur', () => {
-				if(this._config.hideOnBlur)
-					this.hide();
-			});
+      // hide window when loses focus
+      win.on('blur', () => {
+        if (this._config.hideOnBlur) {
+          this.hide();
+        }
+      });
 
-			//store the new size selected
-			win.on('resize', () => {
-				if(this._config.resizable && !this._creatingWindow && !this._animating) {
-					switch(this._config.position) {
-					case 'top':
-					case 'bottom':
-						this._config.size = win.getSize()[1];
-						break;
+      // store the new size selected
+      win.on('resize', () => {
+        if (this._config.resizable && !this._creatingWindow && !this._animating) {
+          switch (this._config.position) {
+          case 'top':
+          case 'bottom':
+            this._config.size = win.getSize()[1];
+            break;
+          case 'right':
+          case 'left':
+            this._config.size = win.getSize()[0];
+            break;
+          case 'topLeft':
+          case 'topRight':
+          case 'bottomLeft':
+          case 'bottomRight':
+          case 'center':
+          default:
+            this._config.size = win.getSize()[0];
+            this._config.size = win.getSize()[1];
+            break;
+          }
+        }
+      });
 
-					case 'right':
-					case 'left':
-						this._config.size = win.getSize()[0];
-						break;
-					}
-				}
-			});
+      // permanent window
+      win.on('closed', () => {
+        this._win = null;
+        this._clearTrayAnimation();
+      });
 
-			//permanent window
-			win.on('closed', () => {
-				this._win = null;
-				this._clearTrayAnimation();
-			});
+      // forces hide initially
+      win.hide();
 
-			//forces hide initially
-			win.hide();
+      // activate terminal
+      win.rpc.emit('termgroup add req');
 
-			//activate terminal
-			win.rpc.emit('termgroup add req');
+      // callback
+      this._creatingWindow = false;
+      if (fn) {
+        fn();
+      }
+    });
+  }
 
-			//callback
-			this._creatingWindow = false;
-			if(fn) fn();
-		});
-	}
+  // apply user overlay window configs
+  _refreshConfig (reapply) {
+    // get user configs
+    const userConfig = this._app.config.getConfig().overlay;
 
-	//apply user overlay window configs
-	_refreshConfig(reapply) {
-		//get user configs
-		let userConfig = this._app.config.getConfig().overlay;
+    // comparing old and new configs
+    if (userConfig) {
+      // hide dock icon or not, check before apply
+      if (userConfig.unique && userConfig.hideDock) {
+        this._app.dock.hide();
+      } else if (this._config.unique && this._config.hideDock) {
+        this._app.dock.show();
+      }
 
-		//comparing old and new configs
-		if(userConfig) {
-			//hide dock icon or not, check before apply
-			if(userConfig.unique && userConfig.hideDock)
-				this._app.dock.hide();
-			else if(this._config.unique && this._config.hideDock)
-				this._app.dock.show();
+      // removing the initial windows of hyperterm
+      if ((userConfig.unique && !this._config.unique) || (userConfig.startAlone && !reapply)) {
+        this._app.getWindows().forEach((win) => {
+          if (win !== this._win) {
+            win.close();
+          }
+        });
+      }
+    }
 
-			//removing the initial windows of hyperterm
-			if((userConfig.unique && !this._config.unique) || (userConfig.startAlone && !reapply)) {
-				this._app.getWindows().forEach(win => {
-					if(win != this._win)
-						win.close();
-				});
-			}
-		}
+    // default configuration
+    this._config = {
+      alwaysOnTop: true,
+      animate: true,
+      hasShadow: false,
+      hideDock: false,
+      hideOnBlur: false,
+      hotkeys: ['Option+Space'],
+      position: 'top',
+      primaryDisplay: false,
+      resizable: true,
+      size: 0.4,
+      startAlone: false,
+      startup: false,
+      tray: true,
+      unique: false
+    };
 
-		//default configuration
-		this._config = {
-			alwaysOnTop: true,
-			animate: true,
-			hasShadow: false,
-			hideDock: false,
-			hideOnBlur: false,
-			hotkeys: ['Option+Space'],
-			position: 'top',
-			primaryDisplay: false,
-			resizable: true,
-			size: 0.4,
-			startAlone: false,
-			startup: false,
-			tray: true,
-			unique: false
-		};
+    // replacing user preferences
+    if (userConfig) {
+      Object.assign(this._config, userConfig);
+    }
 
-		//replacing user preferences
-		if(userConfig) Object.assign(this._config,userConfig);
+    // registering the hotkeys
+    globalShortcut.unregisterAll();
+    for (const hotkey of this._config.hotkeys) {
+      globalShortcut.register(hotkey, () => this.interact());
+    }
 
-		//registering the hotkeys
-		globalShortcut.unregisterAll();
-		for(let hotkey of this._config.hotkeys)
-			globalShortcut.register(hotkey, () => this.interact());
+    // tray icon
+    let trayCreated = false;
 
-		//tray icon
-		let trayCreated = false;
-		if(this._config.tray && !this._tray) {
-			//prevent destroy / create bug
-			this._tray = new Tray(this._trayImage);
-			this._tray.setToolTip('Open HyperTerm Overlay');
-			this._tray.setPressedImage(this._trayPressedImage);
-			this._tray.on('click', () => this.interact());
-			trayCreated = true;
-		} else if(!this._config.tray && this._tray) {
-			this._clearTrayAnimation();
-			this._tray.destroy();
-			this._tray = null;
-		}
+    if (this._config.tray && !this._tray) {
+      // prevent destroy / create bug
+      this._tray = new Tray(this._trayImage);
+      this._tray.setToolTip('Open HyperTerm Overlay');
+      this._tray.setPressedImage(this._trayPressedImage);
+      this._tray.on('click', () => this.interact());
+      trayCreated = true;
+    } else if (!this._config.tray && this._tray) {
+      this._clearTrayAnimation();
+      this._tray.destroy();
+      this._tray = null;
+    }
 
+    if (reapply && this._win) {
+      this._setConfigs(this._win);
+      this._endBounds(this._win);
+      // animate tray
+      if (this._win.isVisible() && trayCreated) {
+        this._animateTray();
+      }
+    }
+  }
 
-		if(reapply && this._win) {
-			this._setConfigs(this._win);
-			this._endBounds(this._win);
-			//animate tray
-			if(this._win.isVisible() && trayCreated)
-				this._animateTray();
-		}
-	}
+  // change windows settings for the overlay window
+  _setConfigs (win) {
+    win.setHasShadow(this._config.hasShadow);
+    win.setResizable(this._config.resizable);
+    win.setAlwaysOnTop(this._config.alwaysOnTop);
+  }
 
-	//change windows settings for the overlay window
-	_setConfigs(win) {
-		win.setHasShadow(this._config.hasShadow);
-		win.setResizable(this._config.resizable);
-		win.setAlwaysOnTop(this._config.alwaysOnTop);
-	}
+  // get current display
+  _getDisplay () {
+    const {screen} = electron,
+      display = !this._config.primaryDisplay ? screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) : screen.getPrimaryDisplay();
 
-	//get current display
-	_getDisplay() {
-		const screen = electron.screen;
-		let display = (!this._config.primaryDisplay) ? screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) : screen.getPrimaryDisplay();
-		return display;
-	}
+    return display;
+  }
 
-	_startBounds() {
-		const {x, y, width, height} = this._getDisplay().workArea;
+  _startBounds () {
+    const {x, y, width, height} = this._getDisplay().workArea;
 
-		switch(this._config.position) {
-		case 'left':
-			this._win.setBounds({ x: x, y: y, width: 1, height: height }, this._config.animate);
-			break;
-		case 'right':
-			this._win.setBounds({ x: x + width - 1, y: y, width: 1, height: height }, this._config.animate);
-			break;
-		case 'bottom':
-			this._win.setBounds({ x: x, y: y + height, width: width, height: 0 }, this._config.animate);
-			break;
-		default:
-		case 'top':
-			this._win.setBounds({ x: x, y: y, width: width, height: 0 }, this._config.animate);
-			break;
-		}
-	}
+    switch (this._config.position) {
+    case 'topLeft':
+      this._win.setBounds({x, y, width: 1, height: 0}, this._config.animate);
+      break;
+    case 'bottomLeft':
+      this._win.setBounds({x, y: y + height, width: 1, height: 0}, this._config.animate);
+      break;
+    case 'topRight':
+      this._win.setBounds({x: x + width - 1, y, width: 1, height: 0}, this._config.animate);
+      break;
+    case 'bottomRight':
+      this._win.setBounds({x: x + width - 1, y: y + height, width: 1, height: 0}, this._config.animate);
+      break;
+    case 'center':
+      this._win.setBounds({x, y, width: 1, height: 1}, this._config.animate);
+      break;
+    case 'left':
+      this._win.setBounds({x, y, width: 1, height}, this._config.animate);
+      break;
+    case 'right':
+      this._win.setBounds({x: x + width - 1, y, width: 1, height}, this._config.animate);
+      break;
+    case 'bottom':
+      this._win.setBounds({x, y: y + height, width, height: 0}, this._config.animate);
+      break;
+    default:
+    case 'top':
+      this._win.setBounds({x, y, width, height: 0}, this._config.animate);
+      break;
+    }
+  }
 
-	//set window bounds according to config
-	_endBounds() {
-		const {x, y, width, height} = this._getDisplay().workArea;
-		let size;
+  // set window bounds according to config
+  _endBounds () {
+    const {x, y, width, height} = this._getDisplay().workArea;
+    let heightSize = null,
+      widthSize = null;
 
-		//end position
-		switch(this._config.position) {
-		case 'left':
-			size = (this._config.size > 1) ? this._config.size : Math.round(width * this._config.size);
-			this._win.setBounds({ x: x, y: y, width: size, height: height }, this._config.animate);
-			break;
-		case 'bottom':
-			size = (this._config.size > 1) ? this._config.size : Math.round(height * this._config.size);
-			this._win.setBounds({ x: x, y: y + height - size, width: width, height: size }, this._config.animate);
-			break;
-		case 'right':
-			size = (this._config.size > 1) ? this._config.size : Math.round(width * this._config.size);
-			this._win.setBounds({ x: width - size, y: y, width: size, height: height }, this._config.animate);
-			break;
-		default:
-		case 'top':
-			size = (this._config.size > 1) ? this._config.size : Math.round(height * this._config.size);
-			this._win.setBounds({ x: x, y: y, width: width, height: size }, this._config.animate);
-			break;
-		}
-	}
+    // end position
+    switch (this._config.position) {
+    case 'topLeft':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x, y, width: widthSize, height: heightSize}, this._config.animate);
+      break;
+    case 'bottomLeft':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x, y: y + height - heightSize, width: widthSize, height: heightSize}, this._config.animate);
+      break;
+    case 'topRight':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x: width - widthSize, y, width: widthSize, height: heightSize}, this._config.animate);
+      break;
+    case 'bottomRight':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x: width - widthSize, y: y + height - heightSize, width: widthSize, height: heightSize}, this._config.animate);
+      break;
+    case 'center':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x: width / 4, y: height / 4, width: width / 2, height: height / 2}, this._config.animate);
+      break;
+    case 'left':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      this._win.setBounds({x, y, width: widthSize, height}, this._config.animate);
+      break;
+    case 'bottom':
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x, y: y + height - heightSize, width, height: heightSize}, this._config.animate);
+      break;
+    case 'right':
+      widthSize = this._config.size > 1 ? this._config.size : Math.round(width * this._config.size);
+      this._win.setBounds({x: width - widthSize, y, width: widthSize, height}, this._config.animate);
+      break;
+    default:
+    case 'top':
+      heightSize = this._config.size > 1 ? this._config.size : Math.round(height * this._config.size);
+      this._win.setBounds({x, y, width, height: heightSize}, this._config.animate); 
+      break;
+    }
+  }
 
-	//tray animation when overlay window is open
-	_animateTray() {
-		if(!this._config.tray || !this._tray) return;
+  // tray animation when overlay window is open
+  _animateTray () {
+    if (!this._config.tray || !this._tray) {
+      return;
+    }
 
-		//tool tip
-		this._tray.setToolTip('Close HyperTerm Overlay');
+    // tool tip
+    this._tray.setToolTip('Close HyperTerm Overlay');
 
-		if(isMac) {
-			if(this._trayAnimation) clearInterval(this._trayAnimation);
-			let type = 0;
-			this._trayAnimation = setInterval(() => {
-				if(this._tray)
-					this._tray.setImage((++type % 2) ? this._trayImage : this._tray2Image);
-			},400);
-		}
-	}
+    if (isMac) {
+      if (this._trayAnimation) {
+        clearInterval(this._trayAnimation);
+      }
+      let type = 0;
 
-	//finish tray animation
-	_clearTrayAnimation() {
-		if(this._trayAnimation) clearInterval(this._trayAnimation);
+      this._trayAnimation = setInterval(() => {
+        if (this._tray) {
+          this._tray.setImage(++type % 2 ? this._trayImage : this._tray2Image);
+        }
+      }, 400);
+    }
+  }
 
-		if(this._tray) {
-			this._tray.setToolTip('Open HyperTerm Overlay');
-			if(isMac) this._tray.setImage(this._trayImage);
-		}
-	}
+  // finish tray animation
+  _clearTrayAnimation () {
+    if (this._trayAnimation) {
+      clearInterval(this._trayAnimation);
+    }
 
-	//setting initial configuration for the new window
-	decorateBrowserOptions(config) {
-		if(this._decoratingWindow) {
-			return Object.assign({}, config, {
-				titleBarStyle: '',
-				frame: false,
-				minWidth: 0,
-				minHeight: 0,
-				maximizable: false,
-				minimizable: false,
-				movable: false,
-				show: false
-			});
-		} else
-			return config;
-	}
+    if (this._tray) {
+      this._tray.setToolTip('Open HyperTerm Overlay');
+      if (isMac) {
+        this._tray.setImage(this._trayImage);
+      }
+    }
+  }
 
-	//open or close overlay window
-	interact() {
-		if(!this._win) {
-			//re-create overlay window and show
-			this._create(() => this.show());
-			return;
-		}
+  // setting initial configuration for the new window
+  decorateBrowserOptions (config) {
+    if (this._decoratingWindow) {
+      return Object.assign({}, config, {
+        titleBarStyle: '',
+        frame: false,
+        minWidth: 0,
+        minHeight: 0,
+        maximizable: false,
+        minimizable: false,
+        movable: false,
+        show: false
+      });
+    }
 
-		if(!this._win.isVisible())
-			this.show();
-		else
-			this.hide();
-	}
+    return config;
+  }
 
-	//show the overlay window
-	show() {
-		if(!this._win || this._animating || this._win.isVisible()) return;
+  // open or close overlay window
+  interact () {
+    if (!this._win) {
+      // re-create overlay window and show
+      this._create(() => this.show());
 
-		//store internal window focus
-		this._lastFocus = BrowserWindow.getFocusedWindow();
+      return;
+    }
 
-		//set window initial bounds (for animation)
-		if(this._config.animate) {
-			this._animating = true;
-			setTimeout(() => {
-				this._animating = false;
-			},250);
-			this._startBounds();
-		}
+    if (!this._win.isVisible()) {
+      this.show();
+    } else {
+      this.hide();
+    }
+  }
 
-		//show and focus window
-		this._win.show();
-		this._win.focus();
+  // show the overlay window
+  show () {
+    if (!this._win || this._animating || this._win.isVisible()) {
+      return;
+    }
 
-		//set end bounds
-		this._endBounds();
+    // store internal window focus
+    this._lastFocus = BrowserWindow.getFocusedWindow();
 
-		this._animateTray();
-	}
+    // set window initial bounds (for animation)
+    if (this._config.animate) {
+      this._animating = true;
+      setTimeout(() => {
+        this._animating = false;
+      }, 250);
+      this._startBounds();
+    }
 
-	//hides the overlay window
-	hide() {
-		if(!this._win || this._animating || !this._win.isVisible()) return;
+    // show and focus window
+    this._win.show();
+    this._win.focus();
 
-		//search for the better previous windows focus
-		let findFocus = () => {
-			if(this._win.isFocused()) {
-				//chose internal or external focus
-				if(this._lastFocus && this._lastFocus.sessions && this._lastFocus.sessions.size)
-					this._lastFocus.focus();
-				else if(isMac)
-					Menu.sendActionToFirstResponder('hide:');
-			}
-		};
+    // set end bounds
+    this._endBounds();
 
-		//control the animation
-		if(this._config.animate) {
-			this._animating = true;
+    this._animateTray();
+  }
 
-			//animation end bounds
-			this._startBounds();
+  // hides the overlay window
+  hide () {
+    if (!this._win || this._animating || !this._win.isVisible()) {
+      return;
+    }
 
-			setTimeout(() => {
-				this._animating = false;
-				findFocus();
-				this._win.hide();
-			}, 250);
-		}
-		//close without animation
-		else {
-			findFocus();
-			this._win.hide();
-		}
+    // search for the better previous windows focus
+    const findFocus = () => {
+      if (this._win.isFocused()) {
+        // chose internal or external focus
+        if (this._lastFocus && this._lastFocus.sessions && this._lastFocus.sessions.size) {
+          this._lastFocus.focus();
+        } else if (isMac) {
+          Menu.sendActionToFirstResponder('hide:');
+        }
+      }
+    };
 
-		this._clearTrayAnimation();
-	}
+    // control the animation
+    if (this._config.animate) {
+      this._animating = true;
 
-	//unload everything applied
-	destroy() {
-		if(this._tray) {
-			this._tray.destroy();
-			this._tray = null;
-		}
-		if(this._win) {
-			//open again if is a plugin reload
-			this._forceStartup = (this._win.isVisible());
-			this._win.close();
-			this._win = null;
-		}
-		globalShortcut.unregisterAll();
-		this._creatingWindow = false;
-		this._decoratingWindow = false;
-		this._animating = false;
-		this._config = {};
-		this._lastFocus = null;
-	}
+      // animation end bounds
+      this._startBounds();
+
+      setTimeout(() => {
+        this._animating = false;
+        findFocus();
+        this._win.hide();
+      }, 250);
+    } else {
+      // close without animation
+      findFocus();
+      this._win.hide();
+    }
+
+    this._clearTrayAnimation();
+  }
+
+  // unload everything applied
+  destroy () {
+    if (this._tray) {
+      this._tray.destroy();
+      this._tray = null;
+    }
+    if (this._win) {
+      // open again if is a plugin reload
+      this._forceStartup = this._win.isVisible();
+      this._win.close();
+      this._win = null;
+    }
+    globalShortcut.unregisterAll();
+    this._creatingWindow = false;
+    this._decoratingWindow = false;
+    this._animating = false;
+    this._config = {};
+    this._lastFocus = null;
+  }
 }
 
 module.exports = new Overlay();
