@@ -1,3 +1,6 @@
+# ⚠️⚠️ DISCLAIMER ⚠️⚠️
+Since the original project is not actively developed anymore I forked it and fixed a super annoying bug for MacOS. For convenience I published the project as an NPM package with a DIFFERENT NAME.
+
 # HyperTerm Overlay
 
 A complete and customizable solution for a permanent / dropdown / hotkey / overlay window in your Hyper.app, accessible via hotkeys and/or toolbar icon (tray).

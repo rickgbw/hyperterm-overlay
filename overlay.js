@@ -324,7 +324,9 @@ class Overlay {
 		}
 
 		//show and focus window
+    this._win.setVisibleOnAllWorkspaces(true);
 		this._win.show();
+    this._win.setVisibleOnAllWorkspaces(false)
 		this._win.focus();
 
 		//set end bounds
