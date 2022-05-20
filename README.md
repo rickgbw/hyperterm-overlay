@@ -1,4 +1,4 @@
-# DISCLAIMER
+# ⚠️⚠️ DISCLAIMER ⚠️⚠️
 Since the original project is not actively developed anymore I forked it and fixed a super annoying bug for MacOS. For convenience I published the project under as an NPM package with a DIFFERENT NAME.
 
 # HyperTerm Overlay
